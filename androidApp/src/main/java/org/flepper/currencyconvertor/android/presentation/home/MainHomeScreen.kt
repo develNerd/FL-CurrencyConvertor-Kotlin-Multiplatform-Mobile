@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
@@ -21,12 +22,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import org.flepper.currencyconvertor.android.MainActivityViewModel
 import org.flepper.currencyconvertor.android.R
@@ -55,11 +60,17 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
     val currencyRatesResult = mainActivityViewModel.currencyRates.collectAsState()
     val modalBottomSheetState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
+
     var currencyText by remember {
-        mutableStateOf("1")
+        mutableStateOf(
+            TextFieldValue(
+                text = ""
+            )
+        )
     }
 
-    var changeCurrentCurrency by remember {
+
+            var changeCurrentCurrency by remember {
         mutableStateOf(false)
     }
 
@@ -72,22 +83,18 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
     fun hideBottomSheet() {
         coroutinesScope.launch {
             modalBottomSheetState.hide()
-            changeCurrentCurrency = false
         }
     }
 
     fun showBottomSheet() {
         coroutinesScope.launch {
             modalBottomSheetState.show()
-            changeCurrentCurrency = false
         }
     }
 
 
 
-    if (changeCurrentCurrency) {
-        showBottomSheet()
-    }
+
 
     val keyboardController = LocalSoftwareKeyboardController.current
     var bottomSheetView by remember {
@@ -143,7 +150,7 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                                 items(filteredItems) { cur ->
                                     CurrencyNameViewItem(currency = cur) { baseSelectedCurrency ->
                                         mainActivityViewModel.setBaseCurrency(baseSelectedCurrency)
-                                        mainActivityViewModel.calculateConversion(if (currencyText.isNotEmpty()) currencyText.toDouble() else 0.0)
+                                        mainActivityViewModel.calculateConversion(if (currencyText.text.isNotEmpty()) parseAmount(currencyText.text).toDouble() else 0.0)
                                         hideBottomSheet()
                                         keyboardController?.hide()
                                     }
@@ -171,11 +178,10 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                         MediumTextBold(text = "( $flag )  ${currentCurrency?.name}")
                         TextButton(onClick = {
                             mainActivityViewModel.setBaseCurrency(currentCurrency!!)
-                            mainActivityViewModel.calculateConversion(if (currencyText.isNotEmpty()) currencyText.toDouble() else 0.0)
+                            mainActivityViewModel.calculateConversion(if (currencyText.text.isNotEmpty()) currencyText.text.toDouble() else 0.0)
                             hideBottomSheet()
                         }) {
-                            MediumTextBold(text = stringResource(id = R.string.set_as_base), color = Color.Cyan)
-
+                            MediumTextBold(text = stringResource(id = R.string.set_as_base), color = MaterialTheme.colors.onSurface)
                         }
                     }
                 }
@@ -210,18 +216,66 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                 ) {
 
                     /** @TextFiled_For_Currency_Amount */
-                    OutLineEdittextNumber(
+
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = currencyText,
+                            onValueChange = {
+                                            newTxt ->
+                                val value = if (newTxt.text.isNotEmpty()) newTxt.copy(newTxt.text.toLocalCurrency(),
+                                    TextRange(newTxt.text.length + 1)
+                                ) else newTxt.copy("")
+                                currencyText = value
+                                mainActivityViewModel.calculateConversion(
+                                    if (currencyText.text.trim().isNotEmpty()) parseAmount(newTxt.text) else 0.0
+                                )
+
+                            },
+                            textStyle = LocalTextStyle.current.copy(
+                                textAlign = TextAlign.End, fontWeight = FontWeight.Medium, fontSize = 20.sp
+                            ),
+                            label = {
+                                Text(
+                                    "", color = MaterialTheme.colors.onSurface, modifier = Modifier.align(
+                                        Alignment.CenterEnd
+                                    )
+                                )
+                            },
+                            placeholder = {
+                                Box(modifier = Modifier.fillMaxWidth()) {
+                                    Text(
+                                        stringResource(
+                                            id = R.string.enter_amount,
+                                            base.code ?: ""
+                                        ), color = MaterialTheme.colors.onSurface, modifier = Modifier.align(
+                                            Alignment.CenterEnd
+                                        )
+                                    )
+                                }
+
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(size2dp),
+                            colors = TextFieldDefaults.textFieldColors(
+                                backgroundColor = Color.Transparent,
+                                focusedIndicatorColor = MaterialTheme.colors.primaryVariant,
+                                unfocusedIndicatorColor = gray,
+                                textColor = MaterialTheme.colors.onSurface
+                            ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+
+
+                 /*   OutLineEdittextNumber(
                         hint = stringResource(
                             id = R.string.enter_amount,
                             base.code ?: ""
                         ), text = currencyText
                     ) { newTxt ->
-                        currencyText = if (newTxt.isNotEmpty()) newTxt.toLocalCurrency() else ""
-                        mainActivityViewModel.calculateConversion(
-                            if (currencyText.trim().isNotEmpty()) parseAmount(newTxt) else 0.0
-                        )
 
-                    }
+                    }*/
 
                     val baseUnitForPreview = BaseUnitForPreview(
                         base.code,

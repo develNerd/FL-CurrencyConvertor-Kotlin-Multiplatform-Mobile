@@ -20,6 +20,6 @@ fun String.toLocalCurrency():String{
         this
     }else{
         val df = DecimalFormat("###,###.##") // or pattern "###,###.##$"
-        df.format(parseAmount(this))
+        df.format(parseAmount(this)).trim().toString()
     }
 }

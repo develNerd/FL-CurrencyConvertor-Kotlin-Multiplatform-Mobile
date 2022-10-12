@@ -3,6 +3,7 @@ package org.flepper.currencyconvertor.android.presentation.widgets
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -49,7 +50,7 @@ fun OutLineEdittextText(
                 unfocusedIndicatorColor = gray,
                 textColor = MaterialTheme.colors.onSurface
             ),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text), singleLine = true, keyboardActions = KeyboardActions()
         )
     }
 
