@@ -12,7 +12,6 @@ import org.koin.core.component.inject
 import org.flepper.currencyconvertor.data.CurrencyRates
 import org.flepper.currencyconvertor.data.THIRTY_MIN_INTERVAL
 import org.flepper.currencyconvertor.data.apppreference.AppDataStore
-import org.flepper.currencyconvertor.data.apppreference.AppSettings
 import org.flepper.currencyconvertor.data.model.OnResultObtained
 import org.flepper.currencyconvertor.data.network.Api
 import org.flepper.currencyconvertor.data.network.ApiResult
@@ -20,14 +19,12 @@ import org.flepper.currencyconvertor.data.network.makeRequestToApi
 import org.flepper.currencyconvertor.data.repositories.GetRatesRepository
 import org.flepper.currencyconvertor.utils.convertToCurrencyRates
 
-class GetRatesRepositoryImpl(private val dataStore:AppDataStore) :
-    GetRatesRepository,KoinComponent {
+class GetRatesRepositoryImpl(private val dataStore: AppDataStore) :
+    GetRatesRepository, KoinComponent {
 
     @NativeCoroutineScope
     internal val coroutineScope = CoroutineScope(Dispatchers.Default)
-    private val appPreference: AppSettings by inject()
     private val api: Api by inject()
-
 
 
     private val _currencyRates = MutableStateFlow(
@@ -38,9 +35,10 @@ class GetRatesRepositoryImpl(private val dataStore:AppDataStore) :
         )
     )
 
-    override fun currencyRates(): StateFlow<OnResultObtained<CurrencyRates>> = _currencyRates.asStateFlow()
+    override fun currencyRates(): StateFlow<OnResultObtained<CurrencyRates>> =
+        _currencyRates.asStateFlow()
 
-    override  fun loadData() {
+    override fun loadData() {
 
         val result = mutableListOf<ApiResult<String>>()
 
@@ -57,56 +55,56 @@ class GetRatesRepositoryImpl(private val dataStore:AppDataStore) :
 
 
             val getRates = async {
-               if (lastTimeStamp == 0L|| difference > lastTimeStamp) {
-                   return@async getLatestRates()
-               } else {
-                   ApiResult.Success(appPreference.localLatestJson)
-               }
-            }
-
-            val getCurrencies = async {
-                if (lastTimeStamp == 0L|| difference > lastTimeStamp) {
-                    return@async getCurrencyNames()
+                if (lastTimeStamp == 0L || difference > lastTimeStamp) {
+                    return@async getLatestRates()
                 } else {
-                    ApiResult.Success(appPreference.localCurrencyJson)
+                    ApiResult.Success(dataStore.localLatestJson.first())
                 }
             }
 
-            awaitAll(getRates,getCurrencies).forEach { res ->
+            val getCurrencies = async {
+                if (lastTimeStamp == 0L || difference > lastTimeStamp) {
+                    return@async getCurrencyNames()
+                } else {
+                    ApiResult.Success(dataStore.localCurrencyJson.first())
+                }
+            }
+
+            awaitAll(getRates, getCurrencies).forEach { res ->
                 result.add(res)
             }
 
             val first = result.first()
             val second = result[1]
-            resolveCombineApiRequest(first,second,
-                onSuccess = {rates,currencies ->
-                _currencyRates.value = OnResultObtained(
-                    convertToCurrencyRates(rates, currencies)!!,
-                    true,
-                    null
-                )
-                appPreference.updateLocalLatestJson(rates)
-                appPreference.updateLocalCurrencyJson(currencies)
-                appPreference.updateLasSuccessTimeStamp(Clock.System.now().toEpochMilliseconds())
-            }, onInternetError = {error ->
-                _currencyRates.value = OnResultObtained(
-                    null,
-                    true,
-                    "error"
-                )
-            }, onGenericError = {error ->
-                _currencyRates.value = OnResultObtained(
-                    null,
-                    true,
-                    error
-                )
-            }, onHttpError = {error ->
-                _currencyRates.value = OnResultObtained(
-                    null,
-                    true,
-                    error
-                )
-            })
+            resolveCombineApiRequest(first, second,
+                onSuccess = { rates, currencies ->
+                    _currencyRates.value = OnResultObtained(
+                        convertToCurrencyRates(rates, currencies)!!,
+                        true,
+                        null
+                    )
+                    dataStore.updateLocalLatestJson(rates)
+                    dataStore.updateLocalCurrencyJson(currencies)
+                    dataStore.updateLasSuccessTimeStamp(Clock.System.now().toEpochMilliseconds())
+                }, onInternetError = { error ->
+                    _currencyRates.value = OnResultObtained(
+                        null,
+                        true,
+                        "error"
+                    )
+                }, onGenericError = { error ->
+                    _currencyRates.value = OnResultObtained(
+                        null,
+                        true,
+                        error
+                    )
+                }, onHttpError = { error ->
+                    _currencyRates.value = OnResultObtained(
+                        null,
+                        true,
+                        error
+                    )
+                })
         }
 
     }
@@ -114,35 +112,13 @@ class GetRatesRepositoryImpl(private val dataStore:AppDataStore) :
 
     override suspend fun getLatestRates(): ApiResult<String> {
         return makeRequestToApi {
-            val lastTimeStamp = appPreference.lasSuccessTimeStamp
-            val difference =
-                Clock.System.now().toEpochMilliseconds() - appPreference.lasSuccessTimeStamp
-
-            Logger.e { "lasSuccessTimeStamp ${appPreference.lasSuccessTimeStamp} --- difference $difference --- THIRTY_MIN_INTERVAL $THIRTY_MIN_INTERVAL" }
-            if (lastTimeStamp == 0L || difference > lastTimeStamp){
-                //difference > THIRTY_MIN_INTERVAL || lastTimeStamp == 0L) {
-                val result = api.getLatestRates()
-                result
-            } else {
-                appPreference.localLatestJson!!
-            }
-
+            api.getLatestRates()
         }
     }
 
     override suspend fun getCurrencyNames(): ApiResult<String> {
         return makeRequestToApi {
-            val lastTimeStamp = appPreference.lasSuccessTimeStamp
-            val difference =
-                Clock.System.now().toEpochMilliseconds() - appPreference.lasSuccessTimeStamp
-
-            Logger.e { "lasSuccessTimeStamp ${appPreference.lasSuccessTimeStamp} --- difference $difference --- THIRTY_MIN_INTERVAL $THIRTY_MIN_INTERVAL" }
-            if (lastTimeStamp == 0L|| difference > lastTimeStamp) {
-                val result = api.getCurrencies()
-                result
-            } else {
-                appPreference.localCurrencyJson!!
-            }
+            api.getCurrencies()
         }
     }
 
@@ -189,7 +165,7 @@ fun <First : Any, Second : Any> resolveCombineApiRequest(
             }
         }
 
-    }catch (e:Exception){
+    } catch (e: Exception) {
         onGenericError(e.message ?: "")
     }
 
