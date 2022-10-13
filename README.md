@@ -1,5 +1,5 @@
 # FL-CurrencyConvertor-Kotlin-Multiplatform-Mobile
-The FL Currency convertor is a kotlin multiplaform app written in Kotlin and swift to help other devs easily learn the Kotlin Multiplatfotm Mobile framwework,
+The FL Currency convertor is a kotlin multiplatform app written in Kotlin and swift to help other devs easily learn and adopt the Kotlin Multiplatform Mobile framework,
 whiles inculcating some of the best practices in modern application development. 
 
 # Run the App
