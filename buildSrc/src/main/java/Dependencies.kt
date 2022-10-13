@@ -24,4 +24,12 @@ object Deps {
         const val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt"
     }
 
+    object JetpackPreviews {
+        // Lower-level APIs with support for custom serialization
+        const val datasore_okio = "androidx.datastore:datastore-core-okio:1.1.0-dev01"
+        // Higher-level APIs for storing values of basic types
+        const val datasore = "androidx.datastore:datastore-preferences-core:1.1.0-dev01"
+
+    }
+
 }

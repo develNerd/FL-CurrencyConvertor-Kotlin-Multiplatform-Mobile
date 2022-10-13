@@ -4,10 +4,9 @@ import android.app.Application
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.logger.Level
-import org.flepper.currencyconvertor.android.di.appModule
 import org.flepper.currencyconvertor.android.di.presentationModule
 import org.flepper.currencyconvertor.di.initKoin
-import org.flepper.currencyconvertor.di.netWorkingModule
+import org.flepper.currencyconvertor.di.sharedModule
 
 class MainApp : Application() {
     override fun onCreate() {
@@ -19,7 +18,7 @@ class MainApp : Application() {
             androidContext(this@MainApp)
             // if (BuildConfig.DEBUG)
             androidLogger(Level.ERROR)
-            modules(appModule,appModules, netWorkingModule)
+            modules(appModules, sharedModule)
         }
 
     }

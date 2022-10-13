@@ -8,9 +8,7 @@ plugins {
 }
 
 
-val webApiKey:String = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(
-    rootDir
-).getProperty("WEB_CLIENT_API_KEY")
+
 
 
 kotlin {
@@ -52,6 +50,11 @@ kotlin {
 
                 with(Deps.Kermit){
                     implementation(kermitMain)
+                }
+
+                with(Deps.JetpackPreviews){
+                    implementation(datasore_okio)
+                    implementation(datasore)
                 }
 
                 api(Deps.multiplatformSettings)
@@ -113,6 +116,22 @@ android {
     }
 }
 
+
+//TODO(Comment out if you need to use Buildkonfig)
+/**
+ *
+In local.properties set
+
+sdk.dir=/Users/d3vnerd/Library/Android/sdk
+WEB_CLIENT_API_KEY=API_CLIENT_STRING
+
+val webApiKey:String = com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(
+rootDir
+).getProperty("WEB_CLIENT_API_KEY")
+
+
+ */
+
 buildkonfig {
     packageName = "org.flepper.currencyconvertor"
     val webKey = "web_key"
@@ -121,7 +140,7 @@ buildkonfig {
         buildConfigField(
             com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING,
             webKey,
-            webApiKey
+            "webApiKey" //replace with  webApiKey variable
         )
     }
 

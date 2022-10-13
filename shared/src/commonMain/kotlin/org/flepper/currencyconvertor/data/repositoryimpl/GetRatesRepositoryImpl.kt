@@ -1,5 +1,7 @@
 package org.flepper.currencyconvertor.data.repositoryimpl
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import co.touchlab.kermit.Logger
 import com.rickclephas.kmp.nativecoroutines.NativeCoroutineScope
 import kotlinx.coroutines.*
@@ -9,6 +11,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.flepper.currencyconvertor.data.CurrencyRates
 import org.flepper.currencyconvertor.data.THIRTY_MIN_INTERVAL
+import org.flepper.currencyconvertor.data.apppreference.AppDataStore
 import org.flepper.currencyconvertor.data.apppreference.AppSettings
 import org.flepper.currencyconvertor.data.model.OnResultObtained
 import org.flepper.currencyconvertor.data.network.Api
@@ -17,7 +20,7 @@ import org.flepper.currencyconvertor.data.network.makeRequestToApi
 import org.flepper.currencyconvertor.data.repositories.GetRatesRepository
 import org.flepper.currencyconvertor.utils.convertToCurrencyRates
 
-class GetRatesRepositoryImpl() :
+class GetRatesRepositoryImpl(private val dataStore:AppDataStore) :
     GetRatesRepository,KoinComponent {
 
     @NativeCoroutineScope
@@ -41,15 +44,19 @@ class GetRatesRepositoryImpl() :
 
         val result = mutableListOf<ApiResult<String>>()
 
-        val lastTimeStamp = appPreference.lasSuccessTimeStamp
-        val difference =
-            Clock.System.now().toEpochMilliseconds() - appPreference.lasSuccessTimeStamp
-
-        Logger.e { "lasSuccessTimeStamp ${appPreference.lasSuccessTimeStamp} --- difference $difference --- THIRTY_MIN_INTERVAL $THIRTY_MIN_INTERVAL" }
-
-
         coroutineScope.launch {
-           val getRates = async {
+
+
+            val lastTimeStamp = dataStore.lasSuccessTimeStamp.first()
+            val lasSuccessTimeStamp = dataStore.lasSuccessTimeStamp.first()
+
+            val difference =
+                Clock.System.now().toEpochMilliseconds() - lasSuccessTimeStamp
+
+            Logger.e { "lasSuccessTimeStamp $lasSuccessTimeStamp --- difference $difference --- THIRTY_MIN_INTERVAL $THIRTY_MIN_INTERVAL" }
+
+
+            val getRates = async {
                if (lastTimeStamp == 0L|| difference > lastTimeStamp) {
                    return@async getLatestRates()
                } else {
@@ -157,7 +164,6 @@ fun <First : Any, Second : Any> resolveCombineApiRequest(
     try {
         when {
             first is ApiResult.Success && second is ApiResult.Success -> {
-                //Logger.e { "Success" }
                 onSuccess(first.response, second.response)
             }
             first is ApiResult.NoInternet || second is ApiResult.NoInternet -> {
@@ -166,23 +172,19 @@ fun <First : Any, Second : Any> resolveCombineApiRequest(
             first is ApiResult.GenericError || second is ApiResult.GenericError -> {
                 if (first is ApiResult.GenericError) {
                     onGenericError(first.error.message ?: "")
-                    //Logger.e("Api Exception") { "${first.error} Some thing went Wrong" }
                 }
 
                 if (second is ApiResult.GenericError) {
                     onGenericError(second.error.message ?: "")
-                    //Logger.e("Api Exception") { "${second.error} Some thing went Wrong" }
                 }
             }
             first is ApiResult.HttpError || second is ApiResult.HttpError -> {
                 if (first is ApiResult.HttpError) {
-                    onHttpError(first.error.message ?: "")
-                   // Logger.e("Api Exception") { "${first.error} Some thing went Wrong" }
+                    onHttpError(first.error.message)
                 }
 
                 if (second is ApiResult.HttpError) {
-                    onHttpError(second.error.message ?: "")
-                    //Logger.e("Api Exception") { "${second.error} Some thing went Wrong" }
+                    onHttpError(second.error.message)
                 }
             }
         }
