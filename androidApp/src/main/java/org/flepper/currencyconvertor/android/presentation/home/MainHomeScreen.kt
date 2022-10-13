@@ -70,7 +70,7 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
     }
 
 
-            var changeCurrentCurrency by remember {
+    var changeCurrentCurrency by remember {
         mutableStateOf(false)
     }
 
@@ -91,9 +91,6 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
             modalBottomSheetState.show()
         }
     }
-
-
-
 
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -150,7 +147,11 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                                 items(filteredItems) { cur ->
                                     CurrencyNameViewItem(currency = cur) { baseSelectedCurrency ->
                                         mainActivityViewModel.setBaseCurrency(baseSelectedCurrency)
-                                        mainActivityViewModel.calculateConversion(if (currencyText.text.isNotEmpty()) parseAmount(currencyText.text).toDouble() else 0.0)
+                                        mainActivityViewModel.calculateConversion(
+                                            if (currencyText.text.isNotEmpty()) parseAmount(
+                                                currencyText.text
+                                            ).toDouble() else 0.0
+                                        )
                                         hideBottomSheet()
                                         keyboardController?.hide()
                                     }
@@ -181,7 +182,10 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                             mainActivityViewModel.calculateConversion(if (currencyText.text.isNotEmpty()) currencyText.text.toDouble() else 0.0)
                             hideBottomSheet()
                         }) {
-                            MediumTextBold(text = stringResource(id = R.string.set_as_base), color = MaterialTheme.colors.onSurface)
+                            MediumTextBold(
+                                text = stringResource(id = R.string.set_as_base),
+                                color = MaterialTheme.colors.onSurface
+                            )
                         }
                     }
                 }
@@ -220,39 +224,35 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
                             value = currencyText,
-                            onValueChange = {
-                                            newTxt ->
-                                val value = if (newTxt.text.isNotEmpty()) newTxt.copy(newTxt.text.toLocalCurrency(),
+                            onValueChange = { newTxt ->
+                                val value = if (newTxt.text.isNotEmpty()) newTxt.copy(
+                                    newTxt.text.toLocalCurrency(),
                                     TextRange(newTxt.text.length + 1)
                                 ) else newTxt.copy("")
                                 currencyText = value
                                 mainActivityViewModel.calculateConversion(
-                                    if (currencyText.text.trim().isNotEmpty()) parseAmount(newTxt.text) else 0.0
+                                    if (currencyText.text.trim()
+                                            .isNotEmpty()
+                                    ) parseAmount(newTxt.text) else 0.0
                                 )
 
                             },
                             textStyle = LocalTextStyle.current.copy(
-                                textAlign = TextAlign.End, fontWeight = FontWeight.Medium, fontSize = 20.sp
+                                textAlign = TextAlign.End,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 20.sp
                             ),
                             label = {
                                 Text(
-                                    "", color = MaterialTheme.colors.onSurface, modifier = Modifier.align(
+                                    stringResource(
+                                        id = R.string.enter_amount,
+                                        base.code ?: ""
+                                    ),
+                                    color = MaterialTheme.colors.onSurface,
+                                    modifier = Modifier.align(
                                         Alignment.CenterEnd
                                     )
                                 )
-                            },
-                            placeholder = {
-                                Box(modifier = Modifier.fillMaxWidth()) {
-                                    Text(
-                                        stringResource(
-                                            id = R.string.enter_amount,
-                                            base.code ?: ""
-                                        ), color = MaterialTheme.colors.onSurface, modifier = Modifier.align(
-                                            Alignment.CenterEnd
-                                        )
-                                    )
-                                }
-
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -268,14 +268,14 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                     }
 
 
-                 /*   OutLineEdittextNumber(
-                        hint = stringResource(
-                            id = R.string.enter_amount,
-                            base.code ?: ""
-                        ), text = currencyText
-                    ) { newTxt ->
+                    /*   OutLineEdittextNumber(
+                           hint = stringResource(
+                               id = R.string.enter_amount,
+                               base.code ?: ""
+                           ), text = currencyText
+                       ) { newTxt ->
 
-                    }*/
+                       }*/
 
                     val baseUnitForPreview = BaseUnitForPreview(
                         base.code,
@@ -302,7 +302,7 @@ fun MainHomeScreen(mainActivityViewModel: MainActivityViewModel) {
                             columns = GridCells.Fixed(GRID_COLUMN_COUNT)
                         ) {
                             items(currencyRatesResult.value.result!!.rates) { currency ->
-                                CurrencyItem(currency = currency){cur ->
+                                CurrencyItem(currency = currency) { cur ->
                                     currentCurrency = cur
                                     bottomSheetView = BottomSheetScreen.VIEW_SELECTED
                                     showBottomSheet()
@@ -400,7 +400,7 @@ fun CurrencyButtonView(@PreviewParameter(BaseUnitPreviewProvider::class) baseUni
 }
 
 @Composable
-fun CurrencyItem(currency: Currency,onClick: (Currency) -> Unit) {
+fun CurrencyItem(currency: Currency, onClick: (Currency) -> Unit) {
 
     Box(
         Modifier
