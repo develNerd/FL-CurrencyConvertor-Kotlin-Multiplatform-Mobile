@@ -5,7 +5,8 @@ whiles inculcating some of the best practices in modern application development.
 # Run the App
 
 The app depends on the open exchange rates api, as such you will need an api key to perform requests 
-- Add **WEB_CLIENT_API_KEY=<OPEN_EXCAHGE_RATES_API_KEY>** to your local properties file
+- Add **WEB_CLIENT_API_KEY=<OPEN_EXCAHGE_RATES_API_KEY>** to your local properties file or Just replace the APP_ID in the APi class
+- Get App IDs here [API_KEY](https://openexchangerates.org/account/app-ids)
 - Build and Run both Android and IOS apps
 
 # Tests
